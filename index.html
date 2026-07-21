@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>LectureLink — QR-Based Attendance Management System</title>
+  
+  <!-- Premium Fonts & External Libraries -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Group 13 Upgraded Design System (Emmanuel Aruna) -->
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 1: LOGIN & REGISTRATION
+     Author: Alimamy Emmanuel Kamara (Student ID: 11277)
+══════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">
+      <h1>Lecture<span>Link</span></h1>
+      <p>Secure, mobile-first lecture attendance portal</p>
+    </div>
+
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="switchRole('student')">Student</button>
+      <button class="role-tab" onclick="switchRole('lecturer')">Lecturer</button>
+      <button class="role-tab" onclick="switchRole('admin')">Admin</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form-wrap">
+      <div id="login-alert" class="alert alert-error"></div>
+      <div class="form-group">
+        <label>University Email</label>
+        <input type="email" id="login-email" placeholder="e.g. akamara@unimak.edu.sl"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password (e.g. student123)"/>
+      </div>
+      <div style="font-size:.82rem; color:var(--muted); background:#F8FAFC; border-radius:8px; padding:.7rem .85rem; margin-bottom:1.15rem; border:1px solid var(--border);">
+        🔓 <strong>Instant Sign-In Mode</strong>: Enter any valid email (e.g. <code>alimamy@gmail.com</code>). If it's a new email, an account will be created automatically!
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">Sign In to Portal →</button>
+      <div class="toggle-link" id="register-toggle">
+        Don't have an account? <a onclick="showRegister()">Register student account</a>
+      </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form-wrap" style="display:none">
+      <div id="register-alert" class="alert alert-error"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="reg-first" placeholder="First name"/>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="reg-last" placeholder="Last name"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>University Email</label>
+        <input type="email" id="reg-email" placeholder="e.g. student@unimak.edu.sl"/>
+      </div>
+      <div class="form-group">
+        <label>Matric Number</label>
+        <input type="text" id="reg-matric" placeholder="e.g. 11277"/>
+      </div>
+      <div class="form-group">
+        <label>Degree Course</label>
+        <select id="reg-course">
+          <option value="">Select course</option>
+          <option>Computer Science</option>
+          <option>Engineering</option>
+          <option>Business Administration</option>
+          <option>Social Sciences</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create password (min 6 chars)"/>
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()">Create Student Account</button>
+      <div class="toggle-link">
+        Already have an account? <a onclick="showLogin()">Sign in</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 2: STUDENT DASHBOARD
+══════════════════════════════════════════════════ -->
+<div id="screen-student" class="screen">
+  <nav class="topnav">
+    <span class="topnav-brand">Lecture<span>Link</span></span>
+    <div class="topnav-right">
+      <span class="nav-user" id="student-nav-name"></span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="page-body">
+    <div class="page-header">
+      <h2 id="student-greeting">Good morning</h2>
+      <p>Student Portal — scan active lecture QR codes to mark your attendance</p>
+    </div>
+
+    <!-- Permanent Scan Banner -->
+    <div class="card" style="margin-bottom:1.5rem; background:linear-gradient(135deg, #0F172A 0%, #1E293B 100%); border-color:#1E293B; color:#fff;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div style="font-size:.78rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:.35rem;">📷 Live WebRTC Camera Scanner</div>
+          <div style="font-weight:700; color:var(--white); font-size:1.1rem;">Ready to mark your class attendance?</div>
+          <div style="font-size:.85rem; color:rgba(255,255,255,0.65); margin-top:.2rem;">Launch camera scanner or enter the active lecture QR token.</div>
+        </div>
+        <button class="btn btn-success" onclick="showScanner()" style="white-space:nowrap; flex-shrink:0;">⚡ Launch Camera Scanner</button>
+      </div>
+    </div>
+
+    <!-- Active Session Banner -->
+    <div id="active-session-banner" class="card" style="margin-bottom:1.5rem; border-left:5px solid var(--green); display:none">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <div class="section-label" style="color:var(--green);"><span class="pulse-dot"></span> Live Session Active</div>
+          <div style="font-weight:700; color:var(--navy); font-size:1.15rem;" id="active-session-name"></div>
+          <div style="font-size:.85rem; color:var(--muted); margin-top:.15rem;" id="active-session-code"></div>
+        </div>
+        <button id="active-scan-btn" class="btn btn-success" onclick="showScanner()">Scan QR to Sign In</button>
+      </div>
+    </div>
+
+    <!-- No active session info -->
+    <div id="no-session-banner" class="card" style="margin-bottom:1.5rem; text-align:center; padding:1.75rem; border-style:dashed; display:none">
+      <div style="font-size:2.5rem; margin-bottom:.5rem;">📡</div>
+      <div style="font-weight:700; color:var(--navy); font-size:1.1rem;">No Active Lecture Session</div>
+      <div style="font-size:.88rem; color:var(--muted); margin-top:.25rem;">Your lecturer will generate a QR code when class starts.</div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card accent">
+        <div class="stat-label">Total Sessions</div>
+        <div class="stat-value" id="s-total">0</div>
+        <div class="stat-sub">Completed lectures</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Verified Present</div>
+        <div class="stat-value" id="s-present">0</div>
+        <div class="stat-sub">Attendance records</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Attendance Rate</div>
+        <div class="stat-value" id="s-rate">—</div>
+        <div class="stat-sub">Overall percentage</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Course Attendance Rates Breakdown -->
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Enrolled Courses Attendance</h3><p>Your breakdown per registered class</p></div>
+        </div>
+        <div id="student-course-breakdown"></div>
+      </div>
+
+      <!-- Attendance History Log -->
+      <div class="card">
+        <div class="card-header">
+          <div><h3>Attendance History Log</h3><p>Your recent verified sign-in records</p></div>
+        </div>
+        <div id="attendance-history"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 3: LECTURER DASHBOARD
+══════════════════════════════════════════════════ -->
+<div id="screen-lecturer" class="screen">
+  <nav class="topnav">
+    <span class="topnav-brand">Lecture<span>Link</span></span>
+    <div class="topnav-right">
+      <span class="nav-user" id="lecturer-nav-name"></span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="page-body wide">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2 id="lecturer-greeting">Lecturer Management Portal</h2>
+        <p>Generate time-sensitive QR codes, monitor live sign-ins, and view class reports</p>
+      </div>
+      <button class="btn btn-outline" onclick="openLecturerCreateClassModal()">+ Create New Class</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:1.5rem;">
+      <div class="stat-card accent">
+        <div class="stat-label">Enrolled Students</div>
+        <div class="stat-value" id="l-enrolled">0</div>
+        <div class="stat-sub">Across all classes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Average Attendance</div>
+        <div class="stat-value" id="l-avg">—</div>
+        <div class="stat-sub">This semester</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Sessions Conducted</div>
+        <div class="stat-value" id="l-sessions">0</div>
+        <div class="stat-sub">Completed sessions</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Start Session -->
+      <div class="card">
+        <div class="card-header"><div><h3>Start Attendance Session</h3><p>Generate a dynamic QR code for your class</p></div></div>
+        <div id="session-start-alert" class="alert alert-error"></div>
+        <div class="form-group">
+          <label>Select Lecture Class</label>
+          <select id="lecturer-class-select">
+            <option value="">Choose a class...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>QR Validity Duration</label>
+          <select id="session-duration">
+            <option value="5">5 Minutes (Standard QR window)</option>
+            <option value="10">10 Minutes</option>
+            <option value="15">15 Minutes</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="startSession()">🚀 Generate Live QR Code</button>
+      </div>
+
+      <!-- Active QR Display -->
+      <div class="card" id="qr-display-card">
+        <div class="card-header"><div><h3>Live QR Session Screen</h3><p id="qr-class-label">No active session running</p></div></div>
+        <div id="qr-idle" style="text-align:center; padding:2.5rem 0; color:var(--muted);">
+          <div style="font-size:3.5rem; margin-bottom:.75rem;">📲</div>
+          <p style="font-size:.92rem;">Select a class and click generate to display the QR code.</p>
+        </div>
+        <div id="qr-active" style="display:none">
+          <div class="qr-container">
+            <div class="qr-class" id="qr-display-course"></div>
+            <div class="qr-box" id="qrcode-render"></div>
+            <div style="font-size:.82rem; color:var(--accent); font-weight:600; margin-top:.25rem;" id="qr-token-display"></div>
+            <div class="qr-timer" id="qr-countdown">5:00</div>
+            <div style="font-size:.82rem; color:rgba(255,255,255,0.65);">Remaining time window</div>
+            <div class="qr-signed">
+              <strong id="qr-signed-count">0</strong>
+              <span style="font-size:.9rem; color:rgba(255,255,255,0.7);"> students signed in</span>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-sm" style="margin-top:1.25rem; width:100%;" onclick="endSession()">End Session Now</button>
+
+          <!-- Live Student Sign-In Feed -->
+          <div style="margin-top:1.25rem; border-top:1px solid var(--border); padding-top:1rem; text-align:left;">
+            <div style="font-weight:700; color:var(--navy); font-size:.9rem; margin-bottom:.6rem; display:flex; justify-content:space-between; align-items:center;">
+              <span>⚡ Live Student Sign-In Feed</span>
+              <span class="badge badge-green"><span class="pulse-dot"></span> Live</span>
+            </div>
+            <div id="qr-live-roster" style="max-height:200px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session History -->
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header"><div><h3>Completed Sessions History</h3><p>Attendance breakdowns & manual override tools</p></div></div>
+      <div id="lecturer-session-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     SCREEN 4: ADMIN DASHBOARD
+══════════════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <nav class="topnav">
+    <span class="topnav-brand">Lecture<span>Link</span></span>
+    <div class="topnav-right">
+      <span class="nav-user">System Administrator</span>
+      <button class="btn-logout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </nav>
+  <div class="page-body wide">
+    <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2>University Administration Portal</h2>
+        <p>Institutional attendance metrics, user administration, and export reporting</p>
+      </div>
+      <button class="btn btn-accent" onclick="openAdminAddUserModal()">+ Add New User</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:1.5rem;">
+      <div class="stat-card accent">
+        <div class="stat-label">Registered Students</div>
+        <div class="stat-value" id="a-students">0</div>
+        <div class="stat-sub">Active accounts</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Sessions</div>
+        <div class="stat-value" id="a-sessions">0</div>
+        <div class="stat-sub">Conducted to date</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Attendance Records</div>
+        <div class="stat-value" id="a-records">0</div>
+        <div class="stat-sub">Total verified logs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Overall Average</div>
+        <div class="stat-value" id="a-avg">—</div>
+        <div class="stat-sub">University-wide</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Departmental Breakdown -->
+      <div class="card">
+        <div class="card-header"><div><h3>Departmental Performance</h3><p>Attendance rates grouped by faculty</p></div></div>
+        <div id="dept-breakdown"></div>
+      </div>
+
+      <!-- User Management Directory -->
+      <div class="card">
+        <div class="card-header"><div><h3>User Directory & Roles</h3><p>Manage active student & lecturer accounts</p></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>User Details</th>
+                <th>Role</th>
+                <th>Course / Dept</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full Attendance Report -->
+    <div class="card" style="margin-top:1.5rem;">
+      <div class="card-header">
+        <div><h3>Master Attendance Report</h3><p>Comprehensive verified log of all student sign-ins</p></div>
+        <div class="export-row" style="margin:0">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ Export CSV Report</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Details</th>
+              <th>Course Code</th>
+              <th>Class Title</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="admin-attendance-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL DIALOGS & POPUPS
+══════════════════════════════════════════════════ -->
+
+<!-- WebRTC Camera QR Scanner Modal -->
+<div id="scanner-modal" class="modal-backdrop" style="display:none">
+  <div class="modal-content">
+    <div class="card-header">
+      <div>
+        <h3>QR Code Scanner Viewfinder</h3>
+        <p>Point your camera at the lecturer's QR code or enter token below</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="closeScanner()">✕ Close</button>
+    </div>
+
+    <!-- Live WebRTC Camera Video Feed -->
+    <div class="camera-feed-wrap">
+      <video id="scanner-video" autoplay playsinline muted></video>
+      <div class="laser-scanner-line"></div>
+    </div>
+    <div id="camera-fallback-note" class="scanner-demo-note" style="margin-top:0.75rem; text-align:center;">
+      📷 Real WebRTC camera feed active
+    </div>
+
+    <div style="margin-top:1.25rem;">
+      <div id="scan-alert" class="alert alert-error"></div>
+      <div class="form-group">
+        <label>QR Session Token (Fallback Input)</label>
+        <input type="text" id="scan-token-input" placeholder="e.g. QR-ABC123-XYZ"/>
+      </div>
+      <button class="btn btn-accent" style="width:100%;" onclick="submitScan()">✓ Verify & Mark Attendance</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Add / Edit User Modal -->
+<div id="modal-admin-user" class="modal-backdrop" style="display:none">
+  <div class="modal-content">
+    <div class="card-header">
+      <div><h3>Admin Account Editor</h3><p>Create or update a user account</p></div>
+      <button class="btn btn-outline btn-sm" onclick="hide('modal-admin-user')">✕</button>
+    </div>
+    <div id="admin-u-alert" class="alert alert-error"></div>
+    <input type="hidden" id="admin-user-id"/>
+    <div class="form-group">
+      <label>Full Name</label>
+      <input type="text" id="admin-u-name" placeholder="Full name"/>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="admin-u-email" placeholder="user@unimak.edu.sl"/>
+    </div>
+    <div class="form-group">
+      <label>System Role</label>
+      <select id="admin-u-role">
+        <option value="student">Student</option>
+        <option value="lecturer">Lecturer</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="admin-u-pass" placeholder="Password"/>
+    </div>
+    <button class="btn btn-primary" onclick="submitAdminUserForm()">Save User Account</button>
+  </div>
+</div>
+
+<!-- Lecturer Create Class Modal -->
+<div id="modal-lecturer-class" class="modal-backdrop" style="display:none">
+  <div class="modal-content">
+    <div class="card-header">
+      <div><h3>Create New Lecture Unit</h3><p>Add a new course unit to your teaching list</p></div>
+      <button class="btn btn-outline btn-sm" onclick="hide('modal-lecturer-class')">✕</button>
+    </div>
+    <div id="lec-class-alert" class="alert alert-error"></div>
+    <div class="form-group">
+      <label>Class Name</label>
+      <input type="text" id="lec-cname" placeholder="e.g. Mobile Application Development"/>
+    </div>
+    <div class="form-group">
+      <label>Course Code</label>
+      <input type="text" id="lec-ccode" placeholder="e.g. CSC405"/>
+    </div>
+    <div class="form-group">
+      <label>Department</label>
+      <select id="lec-cdept">
+        <option value="Computer Science">Computer Science</option>
+        <option value="Engineering">Engineering</option>
+        <option value="Business Administration">Business Administration</option>
+        <option value="Social Sciences">Social Sciences</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="submitLecturerCreateClass()">Create Class Unit</button>
+  </div>
+</div>
+
+<!-- Lecturer Manual Attendance Override Modal -->
+<div id="modal-manual-attendance" class="modal-backdrop" style="display:none">
+  <div class="modal-content">
+    <div class="card-header">
+      <div>
+        <h3>Manual Attendance Override</h3>
+        <p id="manual-class-title">Mark attendance for a student manually</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="hide('modal-manual-attendance')">✕</button>
+    </div>
+    <div id="manual-att-alert" class="alert alert-error"></div>
+    <input type="hidden" id="manual-session-id"/>
+    <div class="form-group">
+      <label>Select Enrolled Student</label>
+      <select id="manual-student-select">
+        <option value="">Choose student...</option>
+      </select>
+    </div>
+    <button class="btn btn-success" style="width:100%;" onclick="submitManualAttendance()">✓ Mark Present Manually</button>
+  </div>
+</div>
+
+<!-- JavaScript Engine Modules -->
+<script src="js/app.js"></script>
+<script src="js/portals.js"></script>
+</body>
+</html>
